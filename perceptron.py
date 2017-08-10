@@ -9,12 +9,12 @@ class Sinapse(object):
     '''
     Classe de sinapses controla os pesos e as entradas
     '''
-    def __init__(self, id):
+    def __init__(self, id, entrada):
         #peso da sinapse
         self.peso = 0
 
         #valor de entrada
-        self.entrada = 0
+        self.entrada = entrada
 
         #identificador da sinapse
         self.id = id
@@ -41,23 +41,23 @@ class Node(object):
         #identificacao
         self.id = id
 
-        #contem os pesoa
+        #contem os pessos
         self.sinapses = []
 
-        #ajuste fino
-        self.bias = 0
+        #sinapse de bias
+        self.add_sinapse(Sinapse('bias', 1))
 
         #limiar
         self.threshold = 1
 
         self.taxa_aprendizado = 1
 
-    def new_sinapse(self, id):
+    def new_sinapse(self, id, entrada):
         '''
         Cria uma nova sinapse com id
         id: identificador da sinapse
         '''
-        self.sinapses.append(Sinapse(id))
+        self.sinapses.append(Sinapse(id, entrada))
 
     def add_sinapse(self, sinapse):
         '''
@@ -90,12 +90,11 @@ class Node(object):
         Executa o Neoronio com os pesos das sinapses carregadas
         '''
         #fase 1 Ativacao
-        soma = 0
+        y_in = 0
         for sinapse in self.sinapses:
-            soma += sinapse.ativacao()
+            y_in += sinapse.ativacao()
 
         #fase 2 Propagacao
-        y_in = self.bias + soma
         if y_in > self.threshold:
             return 1
         elif y_in >= -self.threshold and y_in <= self.threshold:
@@ -116,10 +115,7 @@ class Node(object):
             for sinapse in self.sinapses:
                 sinapse.ajusta_pesos(self.taxa_aprendizado, resposta)
 
-            self.bias += self.taxa_aprendizado * resposta
-
             return False
-
 
 class Perseptron(object):
     '''
@@ -137,7 +133,7 @@ class Perseptron(object):
 
     def treinamento(self, id_sinapses, entrada_dados, respostas):
         '''
-        Executa o treinamento dos pesos, e bias
+        Executa o treinamento dos pesos incluindo uma sinapse de bias
         id_sinapses: lista com as identificacoes das sinapses a serem usadas
         entrada_dados: array de array de dados de entrata do trinamento
         respostas: array com a lista de respostas corretas a cada interacao
@@ -176,7 +172,7 @@ if __name__ == '__main__':
     node = Node('n0')
 
     for nome in nomes_sinapses:
-        node.new_sinapse(nome)
+        node.new_sinapse(nome, 0)
 
     perseptron = Perseptron()
     perseptron.add_node(node)
