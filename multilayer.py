@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Created on 20180204
-Update on 20180204
+Update on 20180215
 @author: Eduardo Pagotto
 '''
 
@@ -12,16 +12,84 @@ Update on 20180204
 #pylint: disable=R0913
 
 import numpy as np
-#import math
 
-def nonlin(x, deriv=False):
+def sigmoid(x):
     '''
     função sigmoid
     '''
-    if deriv is True:
-        return x*(1-x)
-
     return 1/(1+np.exp(-x))
+
+def sigmoid_derivative(x):
+    '''
+    função sigmoid derivada
+    '''  
+    return x*(1-x)
+
+def tanh(x, derivative=False):
+    if (derivative == True):
+        return (1 - (x ** 2))
+    return np.tanh(x)
+
+def relu(x, derivative=False):
+    if (derivative == True):
+        for i in range(0, len(x)):
+            for k in range(len(x[i])):
+                if x[i][k] > 0:
+                    x[i][k] = 1
+                else:
+                    x[i][k] = 0
+        return x
+    for i in range(0, len(x)):
+        for k in range(0, len(x[i])):
+            if x[i][k] > 0:
+                pass  # do nothing since it would be effectively replacing x with x
+            else:
+                x[i][k] = 0
+    return x
+
+def arctan(x, derivative=False):
+    if (derivative == True):
+        return (np.cos(x) ** 2)
+    return np.arctan(x)
+
+def step(x, derivative=False):
+    if (derivative == True):
+        for i in range(0, len(x)):
+            for k in range(len(x[i])):
+                if x[i][k] > 0:
+                    x[i][k] = 0
+        return x
+    for i in range(0, len(x)):
+        for k in range(0, len(x[i])):
+            if x[i][k] > 0:
+                x[i][k] = 1
+            else:
+                x[i][k] = 0
+    return x
+
+def squash(x, derivative=False):
+    if (derivative == True):
+        for i in range(0, len(x)):
+            for k in range(0, len(x[i])):
+                if x[i][k] > 0:
+                    x[i][k] = (x[i][k]) / (1 + x[i][k])
+                else:
+                    x[i][k] = (x[i][k]) / (1 - x[i][k])
+        return x
+    for i in range(0, len(x)):
+        for k in range(0, len(x[i])):
+            x[i][k] = (x[i][k]) / (1 + abs(x[i][k]))
+    return x
+
+def gaussian(x, derivative=False):
+    if (derivative == True):
+        for i in range(0, len(x)):
+            for k in range(0, len(x[i])):
+                x[i][k] = -2* x[i][k] * np.exp(-x[i][k] ** 2)
+    for i in range(0, len(x)):
+        for k in range(0, len(x[i])):
+            x[i][k] = np.exp(-x[i][k] ** 2)
+    return x
 
 def uma_camada():
     
@@ -45,14 +113,14 @@ def uma_camada():
 
         # forward propagation
         l0 = X
-        l1 = nonlin(np.dot(l0,syn0))
+        l1 = sigmoid(np.dot(l0,syn0))
 
         # how much did we miss?
         l1_error = y - l1
 
         # multiply how much we missed by the 
         # slope of the sigmoid at the values in l1
-        l1_delta = l1_error * nonlin(l1,True)
+        l1_delta = l1_error * sigmoid_derivative(l1)
 
         # update weights
         syn0 += np.dot(l0.T,l1_delta)
@@ -87,8 +155,8 @@ def duas_camadas():
 
         # Feed forward through layers 0, 1, and 2
         l0 = x
-        l1 = nonlin(np.dot(l0, syn0))
-        l2 = nonlin(np.dot(l1, syn1))
+        l1 = sigmoid(np.dot(l0, syn0))
+        l2 = sigmoid(np.dot(l1, syn1))
 
         # how much did we miss the target value?
         l2_error = y - l2
@@ -98,14 +166,14 @@ def duas_camadas():
 
         # in what direction is the target value?
         # were we really sure? if so, don't change too much.
-        l2_delta = l2_error * nonlin(l2, deriv=True)
+        l2_delta = l2_error * sigmoid_derivative(l2)
 
         # how much did each l1 value contribute to the l2 error (according to the weights)?
         l1_error = l2_delta.dot(syn1.T)
 
         # in what direction is the target l1?
         # were we really sure? if so, don't change too much.     
-        l1_delta = l1_error * nonlin(l1, deriv=True)
+        l1_delta = l1_error * sigmoid_derivative(l1)
 
         syn1 += l1.T.dot(l2_delta)
         syn0 += l0.T.dot(l1_delta)
@@ -113,9 +181,7 @@ def duas_camadas():
     print('Saida apos o treino')
     print(l2)
 
-
-if __name__ == '__main__':
-
+def multi_laye_xor():
     #synapses
     syn0 = 2 * np.random.random((3,2)) - 1
     syn1 = 2 * np.random.random((3,3)) - 1
@@ -127,7 +193,7 @@ if __name__ == '__main__':
     w_bias2 = 2 * np.random.random((2,1)) - 1
 
     lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
-    lista_r = np.array([ [1, 1], [1, 0],[0, 1], [0, 0] ])
+    lista_r = np.array([ [1, 1], [0, 0],[0, 0], [1, 1] ])
 
     for j in range(60000):
 
@@ -137,22 +203,22 @@ if __name__ == '__main__':
         l0 = lista_v[iva : ivb].T
         result = lista_r[iva : ivb].T
 
-        l1 = nonlin(np.dot(syn0, l0) + w_bias0)
-        l2 = nonlin(np.dot(syn1, l1) + w_bias1)
-        l3 = nonlin(np.dot(syn2, l2) + w_bias2)
+        l1 = sigmoid(np.dot(syn0, l0) + w_bias0)
+        l2 = sigmoid(np.dot(syn1, l1) + w_bias1)
+        l3 = sigmoid(np.dot(syn2, l2) + w_bias2)
 
         l3_erro = result - l3
 
         if (j % 10000) == 0:
             print('Error:' + str(np.mean(np.abs(l3_erro))))
 
-        l3_delta = l3_erro * nonlin(l3, deriv=True)
+        l3_delta = l3_erro * sigmoid_derivative(l3)
 
         l2_error = l3_delta.T.dot(syn2)
-        l2_delta = l2_error.T * nonlin(l2, deriv=True)
+        l2_delta = l2_error.T * sigmoid_derivative(l2)
 
         l1_error = l2_delta.T.dot(syn1)
-        l1_delta = l1_error.T * nonlin(l1, deriv=True)
+        l1_delta = l1_error.T * sigmoid_derivative(l1)
 
         syn2 += l2.dot(l3_delta.T).T
         syn1 += l1.T.dot(l2_delta)
@@ -177,10 +243,14 @@ if __name__ == '__main__':
 
     for indice in range(4):
         l0 = lista_v[indice : indice + 1].T
-        l1 = nonlin(np.dot(syn0, l0) + w_bias0)
-        l2 = nonlin(np.dot(syn1, l1) + w_bias1)
-        l3 = nonlin(np.dot(syn2, l2) + w_bias2)
+        l1 = sigmoid(np.dot(syn0, l0) + w_bias0)
+        l2 = sigmoid(np.dot(syn1, l1) + w_bias1)
+        l3 = sigmoid(np.dot(syn2, l2) + w_bias2)
 
         print(l3)
     
-    print('FIM..')
+    print('FIM..') 
+
+if __name__ == '__main__':
+
+    multi_laye_xor()
