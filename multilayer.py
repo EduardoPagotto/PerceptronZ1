@@ -61,7 +61,7 @@ def uma_camada():
     print(l1)
 
 def duas_camadas():
-        #input
+    #input
     x = np.array([ [0, 0, 1],
                    [0, 1, 1],
                    [1, 0, 1],
@@ -121,30 +121,20 @@ if __name__ == '__main__':
     syn1 = 2 * np.random.random((3,3)) - 1
     syn2 = 2 * np.random.random((2,3)) - 1
 
-    #l0 = np.array([ [0],[0] ])
+    w_bias0 = 2 * np.random.random((2,1)) - 1
+    w_bias1 = 2 * np.random.random((3,1)) - 1
+    w_bias2 = 2 * np.random.random((2,1)) - 1
 
-    lista_v = [
-        np.array([ [0],[0] ]),
-        np.array([ [0],[1] ]),
-        np.array([ [1],[0] ]),
-        np.array([ [1],[1] ]),
-    ]
+    lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
+    lista_r = np.array([ [1, 1], [1, 0],[0, 1], [0, 0] ])
 
-    lista_r = [
-        np.array([ [1],[1] ]),
-        np.array([ [1],[0] ]),
-        np.array([ [0],[1] ]),
-        np.array([ [0],[0] ]),
-    ]
-
-    #result = np.array([ [0], [0] ])
     for j in range(500000):
 
-        iv = j % 4
-        ir = j % 4
+        iva = j % 4
+        ivb = iva + 1
 
-        l0 = lista_v[iv]
-        result = lista_r[ir]
+        l0 = lista_v[iva : ivb].T
+        result = lista_r[iva : ivb].T
 
         l1 = nonlin(np.dot(syn0, l0))
         l2 = nonlin(np.dot(syn1, l1))
@@ -169,10 +159,19 @@ if __name__ == '__main__':
 
     print('Teste Final.....')
 
-    for val in lista_v:
-        #lt = np.array([ [1],[0] ])
-        l1 = nonlin(np.dot(syn0, val))
+    np.savetxt('syn0.txt', syn0, fmt='%f')
+    np.savetxt('syn1.txt', syn1, fmt='%f')
+    np.savetxt('syn2.txt', syn2, fmt='%f')
+    
+    teste = np.loadtxt('syn0.txt', dtype=float)
+
+
+    for indice in range(4):
+        l0 = lista_v[indice : indice + 1].T
+        l1 = nonlin(np.dot(syn0, l0))
         l2 = nonlin(np.dot(syn1, l1))
         l3 = nonlin(np.dot(syn2, l2))
 
         print(l3)
+    
+    print('FIM..')
