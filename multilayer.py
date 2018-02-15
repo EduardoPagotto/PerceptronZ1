@@ -121,14 +121,15 @@ if __name__ == '__main__':
     syn1 = 2 * np.random.random((3,3)) - 1
     syn2 = 2 * np.random.random((2,3)) - 1
 
-    w_bias0 = 2 * np.random.random((2,1)) - 1
+    #bias
+    w_bias0 = 2 * np.random.random((3,1)) - 1
     w_bias1 = 2 * np.random.random((3,1)) - 1
     w_bias2 = 2 * np.random.random((2,1)) - 1
 
     lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
     lista_r = np.array([ [1, 1], [1, 0],[0, 1], [0, 0] ])
 
-    for j in range(500000):
+    for j in range(60000):
 
         iva = j % 4
         ivb = iva + 1
@@ -136,9 +137,9 @@ if __name__ == '__main__':
         l0 = lista_v[iva : ivb].T
         result = lista_r[iva : ivb].T
 
-        l1 = nonlin(np.dot(syn0, l0))
-        l2 = nonlin(np.dot(syn1, l1))
-        l3 = nonlin(np.dot(syn2, l2))
+        l1 = nonlin(np.dot(syn0, l0) + w_bias0)
+        l2 = nonlin(np.dot(syn1, l1) + w_bias1)
+        l3 = nonlin(np.dot(syn2, l2) + w_bias2)
 
         l3_erro = result - l3
 
@@ -157,20 +158,28 @@ if __name__ == '__main__':
         syn1 += l1.T.dot(l2_delta)
         syn0 += l0.dot(l1_delta.T).T
 
+        w_bias2 += l3_delta
+        w_bias1 += l2_delta
+        w_bias0 += l1_delta
+
+
     print('Teste Final.....')
 
     np.savetxt('syn0.txt', syn0, fmt='%f')
     np.savetxt('syn1.txt', syn1, fmt='%f')
     np.savetxt('syn2.txt', syn2, fmt='%f')
-    
-    teste = np.loadtxt('syn0.txt', dtype=float)
 
+    np.savetxt('bias0.txt', w_bias0, fmt='%f')
+    np.savetxt('bias1.txt', w_bias1, fmt='%f')
+    np.savetxt('bias2.txt', w_bias2, fmt='%f')
+
+    #teste = np.loadtxt('syn0.txt', dtype=float)
 
     for indice in range(4):
         l0 = lista_v[indice : indice + 1].T
-        l1 = nonlin(np.dot(syn0, l0))
-        l2 = nonlin(np.dot(syn1, l1))
-        l3 = nonlin(np.dot(syn2, l2))
+        l1 = nonlin(np.dot(syn0, l0) + w_bias0)
+        l2 = nonlin(np.dot(syn1, l1) + w_bias1)
+        l3 = nonlin(np.dot(syn2, l2) + w_bias2)
 
         print(l3)
     
