@@ -52,10 +52,10 @@ class NeuralNet(object):
         '''
         Salva no diretorio corrente os pesos sinapticos e bias
         '''
-        for indice in range(self.w_syn_list):
+        for indice in range(len(self.w_syn_list)):
             np.savetxt('syn{0}.txt'.format(indice), self.w_syn_list[indice], fmt='%f')
 
-        for indice in range(self.w_bias_list):
+        for indice in range(len(self.w_bias_list)):
             np.savetxt('bias{0}.txt'.format(indice), self.w_bias_list[indice], fmt='%f')
 
     def feed_forward(self, layer):
@@ -78,31 +78,41 @@ class NeuralNet(object):
         result: resultado esperado
         return: erro da camada anterior ou None para primeira camada 
         '''
+        #variavel de retorno de erro para acamada inferior
         erro = None
         layer = sigmoid(np.dot(self.w_syn_list[index], local_layer) + self.w_bias_list[index])
 
         if index < limite - 1:
+            #camadas 0 ate penultima
             erro = self.dep_layer_trainer(index + 1, epoc, layer, limite, result)
 
+            #calcula o delta atual pelo erro da camada anterior e acumula no bias
             delta = erro.T * sigmoid_derivative(layer)
             self.w_bias_list[index] += delta
 
             if index != 0:
+                #demais camadas calcula o erro local pelo delta da camada 
                 erro = delta.T.dot(self.w_syn_list[index])
                 self.w_syn_list[index] += local_layer.T.dot(delta)
             else:
-                #primeira camada nao tem ocrrecao de erro para a proxima               
+                #primeira camada nao tem correção de erro para a proxima               
                 self.w_syn_list[index] += local_layer.dot(delta.T).T
         else:
-            
+            #Ultima camada calcula o delta e o erro para a camada anterior
             erro = result - layer
             if (epoc % 10000) == 0:
                 print('Error:' + str(np.mean(np.abs(erro))))
-
+            
+            #multiplica o erro pela derivada da camada atual
             delta = erro * sigmoid_derivative(layer)
+
+            #acumula o delta no Bias
             self.w_bias_list[index] += delta
 
+            #erro e o produto do delta com os pesos sinapticos atual
             erro = delta.T.dot(self.w_syn_list[index])
+
+            #acumula pelos na camada anterior
             self.w_syn_list[index] += local_layer.dot(delta.T).T
 
         return erro
@@ -127,14 +137,17 @@ class NeuralNet(object):
 
 if __name__ == '__main__':
 
-    #lista treinamento
+    #lista treinamento 
     lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
     
     #lista resposta
     lista_r = np.array([ [1, 1], [0, 0],[0, 0], [1, 1] ])
 
-    neural = NeuralNet(2,2,2,3)
+    #2 entrada 2 saida 1 hidden layer com 3 
+    neural = NeuralNet(2,2,1,3)
     neural.trainner(lista_v, 4, lista_r, 60000)
+
+    neural.save()
 
     for indice in range(4):
         li = lista_v[indice : indice + 1].T        
