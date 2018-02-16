@@ -137,27 +137,28 @@ def multi_laye_xor():
         input = lista_v[iva : ivb].T
         result = lista_r[iva : ivb].T
 
-        l0 = sigmoid(np.dot(syn[0], input) + w_bias[0])
-        l1 = sigmoid(np.dot(syn[1], l0) + w_bias[1])
-        l2 = sigmoid(np.dot(syn[2], l1) + w_bias[2])
+        l = []
+        l.append(sigmoid(np.dot(syn[0], input) + w_bias[0]))
+        l.append(sigmoid(np.dot(syn[1], l[0]) + w_bias[1]))
+        l.append(sigmoid(np.dot(syn[2], l[1]) + w_bias[2]))
 
-        l2_erro = result - l2
+        l2_erro = result - l[2]
 
         if (j % 10000) == 0:
             print('Error:' + str(np.mean(np.abs(l2_erro))))
 
-        l2_delta = l2_erro * sigmoid_derivative(l2)
+        l2_delta = l2_erro * sigmoid_derivative(l[2])
         w_bias[2] += l2_delta
         
         l1_error = l2_delta.T.dot(syn[2])
-        syn[2] += l1.dot(l2_delta.T).T
+        syn[2] += l[1].dot(l2_delta.T).T
 
-        l1_delta = l1_error.T * sigmoid_derivative(l1)
+        l1_delta = l1_error.T * sigmoid_derivative(l[1])
         w_bias[1] += l1_delta
         l0_error = l1_delta.T.dot(syn[1])
-        syn[1] += l0.T.dot(l1_delta)
+        syn[1] += l[0].T.dot(l1_delta)
 
-        l0_delta = l0_error.T * sigmoid_derivative(l0)
+        l0_delta = l0_error.T * sigmoid_derivative(l[0])
         w_bias[0] += l0_delta
 
         syn[0] += input.dot(l0_delta.T).T
