@@ -105,19 +105,28 @@ def duas_camadas():
     print('Saida apos o treino')
     print(l2)
 
+def feed_forward(layer, lista_bias, lista_syn):
+    for bias, weight in zip(lista_bias, lista_syn):
+        layer = sigmoid(np.dot(weight, layer) + bias)
+    return layer
 
 def multi_laye_xor():
-    #synapses
-    syn0 = 2 * np.random.random((3,2)) - 1
-    syn1 = 2 * np.random.random((3,3)) - 1
-    syn2 = 2 * np.random.random((2,3)) - 1
+    #pesos sinapticos
+    syn = []
+    syn.append(2 * np.random.random((3,2)) - 1)
+    syn.append(2 * np.random.random((3,3)) - 1)
+    syn.append(2 * np.random.random((2,3)) - 1)
 
-    #bias
-    w_bias0 = 2 * np.random.random((3,1)) - 1
-    w_bias1 = 2 * np.random.random((3,1)) - 1
-    w_bias2 = 2 * np.random.random((2,1)) - 1
+    #pesos bias
+    w_bias = []
+    w_bias.append(2 * np.random.random((3,1)) - 1)
+    w_bias.append(2 * np.random.random((3,1)) - 1)
+    w_bias.append(2 * np.random.random((2,1)) - 1)
 
+    #lista treinamento
     lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
+    
+    #lista resposta
     lista_r = np.array([ [1, 1], [0, 0],[0, 0], [1, 1] ])
 
     for j in range(60000):
@@ -128,9 +137,9 @@ def multi_laye_xor():
         l0 = lista_v[iva : ivb].T
         result = lista_r[iva : ivb].T
 
-        l1 = sigmoid(np.dot(syn0, l0) + w_bias0)
-        l2 = sigmoid(np.dot(syn1, l1) + w_bias1)
-        l3 = sigmoid(np.dot(syn2, l2) + w_bias2)
+        l1 = sigmoid(np.dot(syn[0], l0) + w_bias[0])
+        l2 = sigmoid(np.dot(syn[1], l1) + w_bias[1])
+        l3 = sigmoid(np.dot(syn[2], l2) + w_bias[2])
 
         l3_erro = result - l3
 
@@ -138,42 +147,41 @@ def multi_laye_xor():
             print('Error:' + str(np.mean(np.abs(l3_erro))))
 
         l3_delta = l3_erro * sigmoid_derivative(l3)
+        w_bias[2] += l3_delta
+        
+        l2_error = l3_delta.T.dot(syn[2])
+        syn[2] += l2.dot(l3_delta.T).T
 
-        l2_error = l3_delta.T.dot(syn2)
         l2_delta = l2_error.T * sigmoid_derivative(l2)
+        w_bias[1] += l2_delta
+        l1_error = l2_delta.T.dot(syn[1])
+        syn[1] += l1.T.dot(l2_delta)
 
-        l1_error = l2_delta.T.dot(syn1)
         l1_delta = l1_error.T * sigmoid_derivative(l1)
+        w_bias[0] += l1_delta
 
-        syn2 += l2.dot(l3_delta.T).T
-        syn1 += l1.T.dot(l2_delta)
-        syn0 += l0.dot(l1_delta.T).T
-
-        w_bias2 += l3_delta
-        w_bias1 += l2_delta
-        w_bias0 += l1_delta
+        syn[0] += l0.dot(l1_delta.T).T
 
     print('Teste Final.....')
 
-    np.savetxt('syn0.txt', syn0, fmt='%f')
-    np.savetxt('syn1.txt', syn1, fmt='%f')
-    np.savetxt('syn2.txt', syn2, fmt='%f')
+    np.savetxt('syn0.txt', syn[0], fmt='%f')
+    np.savetxt('syn1.txt', syn[1], fmt='%f')
+    np.savetxt('syn2.txt', syn[2], fmt='%f')
 
-    np.savetxt('bias0.txt', w_bias0, fmt='%f')
-    np.savetxt('bias1.txt', w_bias1, fmt='%f')
-    np.savetxt('bias2.txt', w_bias2, fmt='%f')
-
+    np.savetxt('bias0.txt', w_bias[0], fmt='%f')
+    np.savetxt('bias1.txt', w_bias[1], fmt='%f')
+    np.savetxt('bias2.txt', w_bias[2], fmt='%f')
     #teste = np.loadtxt('syn0.txt', dtype=float)
 
     for indice in range(4):
-        l0 = lista_v[indice : indice + 1].T
-        l1 = sigmoid(np.dot(syn0, l0) + w_bias0)
-        l2 = sigmoid(np.dot(syn1, l1) + w_bias1)
-        l3 = sigmoid(np.dot(syn2, l2) + w_bias2)
-
+        l0 = lista_v[indice : indice + 1].T        
+        l3 = feed_forward(l0, w_bias, syn)
         print(l3)
     
     print('FIM..') 
+
+
+
 
 if __name__ == '__main__':
 
