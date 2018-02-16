@@ -142,26 +142,26 @@ def multi_laye_xor():
         l.append(sigmoid(np.dot(syn[1], l[0]) + w_bias[1]))
         l.append(sigmoid(np.dot(syn[2], l[1]) + w_bias[2]))
 
-        l2_erro = result - l[2]
+        erro = result - l[2]
 
         if (j % 10000) == 0:
-            print('Error:' + str(np.mean(np.abs(l2_erro))))
+            print('Error:' + str(np.mean(np.abs(erro))))
 
-        l2_delta = l2_erro * sigmoid_derivative(l[2])
-        w_bias[2] += l2_delta
+        delta = erro * sigmoid_derivative(l[2])
+        w_bias[2] += delta
         
-        l1_error = l2_delta.T.dot(syn[2])
-        syn[2] += l[1].dot(l2_delta.T).T
+        error = delta.T.dot(syn[2])
+        syn[2] += l[1].dot(delta.T).T
 
-        l1_delta = l1_error.T * sigmoid_derivative(l[1])
-        w_bias[1] += l1_delta
-        l0_error = l1_delta.T.dot(syn[1])
-        syn[1] += l[0].T.dot(l1_delta)
+        delta = error.T * sigmoid_derivative(l[1])
+        w_bias[1] += delta
+        error = delta.T.dot(syn[1])
+        syn[1] += l[0].T.dot(delta)
 
-        l0_delta = l0_error.T * sigmoid_derivative(l[0])
-        w_bias[0] += l0_delta
+        delta = error.T * sigmoid_derivative(l[0])
+        w_bias[0] += delta
 
-        syn[0] += input.dot(l0_delta.T).T
+        syn[0] += input.dot(delta.T).T
 
     print('Teste Final.....')
 
