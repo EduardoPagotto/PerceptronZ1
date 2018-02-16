@@ -134,33 +134,33 @@ def multi_laye_xor():
         iva = j % 4
         ivb = iva + 1
 
-        l0 = lista_v[iva : ivb].T
+        input = lista_v[iva : ivb].T
         result = lista_r[iva : ivb].T
 
-        l1 = sigmoid(np.dot(syn[0], l0) + w_bias[0])
-        l2 = sigmoid(np.dot(syn[1], l1) + w_bias[1])
-        l3 = sigmoid(np.dot(syn[2], l2) + w_bias[2])
+        l0 = sigmoid(np.dot(syn[0], input) + w_bias[0])
+        l1 = sigmoid(np.dot(syn[1], l0) + w_bias[1])
+        l2 = sigmoid(np.dot(syn[2], l1) + w_bias[2])
 
-        l3_erro = result - l3
+        l2_erro = result - l2
 
         if (j % 10000) == 0:
-            print('Error:' + str(np.mean(np.abs(l3_erro))))
+            print('Error:' + str(np.mean(np.abs(l2_erro))))
 
-        l3_delta = l3_erro * sigmoid_derivative(l3)
-        w_bias[2] += l3_delta
+        l2_delta = l2_erro * sigmoid_derivative(l2)
+        w_bias[2] += l2_delta
         
-        l2_error = l3_delta.T.dot(syn[2])
-        syn[2] += l2.dot(l3_delta.T).T
-
-        l2_delta = l2_error.T * sigmoid_derivative(l2)
-        w_bias[1] += l2_delta
-        l1_error = l2_delta.T.dot(syn[1])
-        syn[1] += l1.T.dot(l2_delta)
+        l1_error = l2_delta.T.dot(syn[2])
+        syn[2] += l1.dot(l2_delta.T).T
 
         l1_delta = l1_error.T * sigmoid_derivative(l1)
-        w_bias[0] += l1_delta
+        w_bias[1] += l1_delta
+        l0_error = l1_delta.T.dot(syn[1])
+        syn[1] += l0.T.dot(l1_delta)
 
-        syn[0] += l0.dot(l1_delta.T).T
+        l0_delta = l0_error.T * sigmoid_derivative(l0)
+        w_bias[0] += l0_delta
+
+        syn[0] += input.dot(l0_delta.T).T
 
     print('Teste Final.....')
 
@@ -174,8 +174,8 @@ def multi_laye_xor():
     #teste = np.loadtxt('syn0.txt', dtype=float)
 
     for indice in range(4):
-        l0 = lista_v[indice : indice + 1].T        
-        l3 = feed_forward(l0, w_bias, syn)
+        input = lista_v[indice : indice + 1].T        
+        l3 = feed_forward(input, w_bias, syn)
         print(l3)
     
     print('FIM..') 
