@@ -58,7 +58,6 @@ class NeuralNet(object):
         for indice in range(self.w_bias_list):
             np.savetxt('bias{0}.txt'.format(indice), self.w_bias_list[indice], fmt='%f')
 
-
     def feed_forward(self, layer):
         '''
         Percursor do grafo(neuronios)
@@ -68,7 +67,6 @@ class NeuralNet(object):
         for bias, weight in zip(self.w_bias_list, self.w_syn_list):
             layer = sigmoid(np.dot(weight, layer) + bias)
         return layer
-
 
     def dep_layer_trainer(self, index, epoc, local_layer, limite, result):
         '''
@@ -127,35 +125,6 @@ class NeuralNet(object):
             num_camadas = len(self.w_bias_list)
             self.dep_layer_trainer(0, j, l0, num_camadas, result)
 
-            # layer = sigmoid(np.dot(self.w_syn_list[0], l0) + self.w_bias_list[0])
-            # l_list.append(layer)
-
-            # for indice in range(1, num_camadas):
-            #     layer = sigmoid(np.dot(self.w_syn_list[indice], l_list[indice-1]) + self.w_bias_list[indice])
-            #     l_list.append(layer)
-
-            # l_erro = result - l_list[-1]
-            # if (j % 10000) == 0:
-            #     print('Error:' + str(np.mean(np.abs(l_erro))))
-
-            # #ultima camada
-            # l_delta = l_erro * sigmoid_derivative(l_list[-1])
-            # self.w_bias_list[-1] += l_delta
-            # l_erro = l_delta.T.dot(self.w_syn_list[-1])
-            # self.w_syn_list[-1] += l_list[-2].dot(l_delta.T).T
-
-            # #n camada
-            # for indice in range(2, num_camadas - 1):
-            #     l_delta = l_erro.T * sigmoid_derivative(l_list[-indice])
-            #     self.w_bias_list[-indice + 1] += l_delta
-            #     l_erro = l_delta.T.dot( self.w_syn_list[-indice + 1] )
-            #     self.w_syn_list[-indice +1] += l_list[-1].T.dot(l_delta)
-
-            # #primeira camada
-            # l_delta = l_erro.T * sigmoid_derivative(l_list[0])
-            # self.w_bias_list[0] += l_delta
-            # self.w_syn_list[0] += l0.dot(l_delta.T).T
-
 if __name__ == '__main__':
 
     #lista treinamento
@@ -165,7 +134,7 @@ if __name__ == '__main__':
     lista_r = np.array([ [1, 1], [0, 0],[0, 0], [1, 1] ])
 
     neural = NeuralNet(2,2,2,3)
-    neural.trainner(lista_r, 4, lista_r, 60000)
+    neural.trainner(lista_v, 4, lista_r, 60000)
 
     for indice in range(4):
         li = lista_v[indice : indice + 1].T        

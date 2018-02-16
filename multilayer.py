@@ -142,6 +142,7 @@ def multi_laye_xor():
         l.append(sigmoid(np.dot(syn[1], l[0]) + w_bias[1]))
         l.append(sigmoid(np.dot(syn[2], l[1]) + w_bias[2]))
 
+        #op ultima camada
         erro = result - l[2]
 
         if (j % 10000) == 0:
@@ -153,11 +154,14 @@ def multi_laye_xor():
         error = delta.T.dot(syn[2])
         syn[2] += l[1].dot(delta.T).T
 
+        #anterior
         delta = error.T * sigmoid_derivative(l[1])
         w_bias[1] += delta
+
         error = delta.T.dot(syn[1])
         syn[1] += l[0].T.dot(delta)
 
+        #primeira
         delta = error.T * sigmoid_derivative(l[0])
         w_bias[0] += delta
 
@@ -180,9 +184,6 @@ def multi_laye_xor():
         print(l3)
     
     print('FIM..') 
-
-
-
 
 if __name__ == '__main__':
 
