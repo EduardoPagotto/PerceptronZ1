@@ -18,32 +18,24 @@ from ActivactionFunction import sigmoid_derivative
 
 class NeuralNet(object):
     '''
-    Classe de Neuronios padrao camadas N0:N1+1:..:NN+1:NF
+    Classe de Neuronios padrao camadas definidas por grid
     '''
-    def __init__(self, in_size, out_size, hidden_layers, hidden_size):
+    def __init__(self, grid):
         '''
         Inicializa listas de pesos sinapticos e lista de bias com valores aleatorios
-        in_size:numero de neuronios de entrada
-        out_size:numero de neuronios de saida
-        hidden_layers: numero de camadas
-        hidden_size numero de neuronios na camada hidden_layers
+        grid: array com geometrida das camadas de entrada, hidden's e saida
+        [entrada, h1, h2, hn , saida]
         '''
         self.w_syn_list = []
         self.w_bias_list = []
 
-        for index in range(hidden_layers + 1):
+        for index in range(1, len(grid)):
             
-            #TODO optimizar no append direto
-            if index == 0:
-                w_syn = 2 * np.random.random((hidden_size, in_size)) - 1
-                w_bias = 2 * np.random.random((hidden_size,1)) - 1
+            atual = grid[index]
+            anterior = grid[index-1]
 
-            elif index == hidden_layers:
-                w_syn = 2 * np.random.random((out_size, hidden_size)) - 1
-                w_bias = 2 * np.random.random((out_size,1)) - 1
-            else:
-                w_syn = 2 * np.random.random((hidden_size, hidden_size)) - 1
-                w_bias = 2 * np.random.random((hidden_size,1)) - 1
+            w_syn = 2 * np.random.random((atual, anterior)) - 1
+            w_bias = 2 * np.random.random((atual, 1)) - 1           
         
             self.w_syn_list.append(w_syn)
             self.w_bias_list.append(w_bias)
@@ -93,7 +85,12 @@ class NeuralNet(object):
             if index != 0:
                 #demais camadas calcula o erro local pelo delta da camada 
                 erro = delta.T.dot(self.w_syn_list[index])
-                self.w_syn_list[index] += local_layer.T.dot(delta)
+
+                #calcula baseado no shapes passados
+                if self.w_bias_list[index].shape[0] != self.w_bias_list[index -1].shape[0]:
+                    self.w_syn_list[index] += local_layer.dot(delta.T).T
+                else:
+                    self.w_syn_list[index] += local_layer.T.dot(delta)
             else:
                 #primeira camada nao tem correção de erro para a proxima               
                 self.w_syn_list[index] += local_layer.dot(delta.T).T
@@ -110,7 +107,11 @@ class NeuralNet(object):
             self.w_bias_list[index] += delta
 
             #erro e o produto do delta com os pesos sinapticos atual
-            erro = delta.T.dot(self.w_syn_list[index])
+            #calcula baseado no shapes passados
+            if delta.shape[1] != self.w_syn_list[index].shape[0]:
+                erro = delta.T.dot(self.w_syn_list[index])
+            else:
+                erro = delta.dot(self.w_syn_list[index])
 
             #acumula pelos na camada anterior
             self.w_syn_list[index] += local_layer.dot(delta.T).T
@@ -137,20 +138,40 @@ class NeuralNet(object):
 
 if __name__ == '__main__':
 
-    #lista treinamento 
-    lista_v = np.array([ [0, 0], [0, 1],[1, 0], [1, 1] ])
-    
-    #lista resposta
-    lista_r = np.array([ [1, 1], [0, 0],[0, 0], [1, 1] ])
 
-    #2 entrada 2 saida 1 hidden layer com 3 
-    neural = NeuralNet(2,2,1,3)
+
+    #lista treinamento  
+    lista_v = np.array([ [0, 0, 1, 0, 
+                          0, 0, 1, 0,
+                          0, 0, 1, 0, 
+                          0, 0, 1, 0],
+                         [1, 1, 1, 1, 
+                          0, 1, 1, 0,
+                          0, 1, 1, 0, 
+                          1, 1, 1, 1],
+                         [1, 1, 1, 1, 
+                          1, 0, 0, 1,
+                          1, 0, 0, 1, 
+                          1, 1, 1, 1],
+                         [0, 0, 0, 0, 
+                          1, 1, 1, 1,
+                          1, 0, 0, 1, 
+                          0, 0, 0, 0]])
+
+    #lista resposta
+    lista_r = np.array([ [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0], [1, 0, 0, 0] ])
+
+    #16 entrada 4 saida 1 hidden layer com 3 camadas 
+    grid=[16, 32, 24, 8, 4]
+    neural = NeuralNet(grid)
     neural.trainner(lista_v, 4, lista_r, 60000)
 
     neural.save()
 
     for indice in range(4):
         li = lista_v[indice : indice + 1].T        
-        lo = neural.feed_forward(li)
-        print(lo)
+        lo = (10 * neural.feed_forward(li)) / 9
+        print(lo.astype(int).T)
+
+
 
