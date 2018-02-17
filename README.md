@@ -1,5 +1,10 @@
 # PerceptronZ1
-Teste de perceptron
+Implementação de M.L.P. (Perceptron de Multiplas Camadas)
 
-perceptron.py testa algoritmo simples de 1 camada
-multilayer.py 1 camada e varias camadas usando matrizes no lugar de objetos
+NeuralNet.py Classe MPL.
+
+- Atualmente apenas usando ativação com função sigmod
+
+TODO:
+
+- implementar correção de erro modelo adaline

@@ -26,10 +26,6 @@ def uma_camada():
     # output dataset            
     y = np.array([[0,0,1,1]]).T
 
-    # seed random numbers to make calculation
-    # deterministic (just a good practice)
-    #np.random.seed(1)
-
     # initialize weights randomly with mean 0
     syn0 = 2*np.random.random((3,1)) - 1
 
@@ -59,16 +55,11 @@ def duas_camadas():
                    [1, 0, 1],
                    [1, 1, 1] ])
 
-
     #output
     y = np.array([[0],
                   [1],
                   [1],
                   [0]])
-
-
-    #np.random.seed(1)
-    #np.random.seed(1)
 
     #synapses
     syn0 = 2 * np.random.random((3,4)) - 1

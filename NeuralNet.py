@@ -138,8 +138,6 @@ class NeuralNet(object):
 
 if __name__ == '__main__':
 
-
-
     #lista treinamento  
     lista_v = np.array([ [0, 0, 1, 0, 
                           0, 0, 1, 0,
@@ -170,7 +168,7 @@ if __name__ == '__main__':
 
     for indice in range(4):
         li = lista_v[indice : indice + 1].T        
-        lo = (10 * neural.feed_forward(li)) / 9
+        lo =  np.around(neural.feed_forward(li), 1)
         print(lo.astype(int).T)
 
 
