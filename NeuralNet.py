@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Created on 20180215
-Update on 20180216
+Update on 20180219
 @author: Eduardo Pagotto
 '''
 
@@ -10,6 +10,8 @@ Update on 20180216
 #pylint: disable=C0103
 #pylint: disable=W0703
 #pylint: disable=R0913
+
+import json
 
 import numpy as np
 
@@ -23,32 +25,81 @@ class NeuralNet(object):
     def __init__(self, grid):
         '''
         Inicializa listas de pesos sinapticos e lista de bias com valores aleatorios
-        grid: array com geometrida das camadas de entrada, hidden's e saida
+        grid: array com geometrida das camadas de entrada, hidden's e saida ou None se carga por arquivo
         [entrada, h1, h2, hn , saida]
         '''
         self.w_syn_list = []
         self.w_bias_list = []
 
-        for index in range(1, len(grid)):
-            
-            atual = grid[index]
-            anterior = grid[index-1]
+        if grid is not None:
+            for index in range(1, len(grid)):
 
-            w_syn = 2 * np.random.random((atual, anterior)) - 1
-            w_bias = 2 * np.random.random((atual, 1)) - 1           
-        
-            self.w_syn_list.append(w_syn)
-            self.w_bias_list.append(w_bias)
+                atual = grid[index]
+                anterior = grid[index-1]
 
-    def save(self):
+                w_syn = 2 * np.random.random((atual, anterior)) - 1
+                w_bias = 2 * np.random.random((atual, 1)) - 1
+
+                self.w_syn_list.append(w_syn)
+                self.w_bias_list.append(w_bias)
+
+    def load(self, name, file):
         '''
-        Salva no diretorio corrente os pesos sinapticos e bias
+        Carrega pesos treinados de arquivo json
+        name: nome da carga neural
+        file: arquivo a ser carregado
         '''
+        self.w_syn_list = []
+        self.w_bias_list = []
+
+        with open(file) as data_file:
+            data = json.load(data_file)
+
+        neural = data['neural']
+        for item in neural:
+            if item['name'] == name:
+
+                lista_syn = item['w_synp']
+                for a in lista_syn:
+                    aa = np.array(a)
+                    #print(aa)
+                    self.w_syn_list.append(aa)
+
+                list_bias = item['w_bias']
+                for a in list_bias:
+                    aa = np.array(a)
+                    #print(aa)
+                    self.w_bias_list.append(aa)
+
+    def save(self, name, file):
+        '''
+        Salva pesos treinados de arquivo json
+        name: nome da carga neural
+        file: arquivo a ser salvo
+        '''
+
+        neural = {}
+        neural['neural'] = []
+
+        obj_dados = {}
+        obj_dados['name'] = name
+        obj_dados['w_synp'] = []
+        obj_dados['w_bias'] = []
+
         for indice in range(len(self.w_syn_list)):
-            np.savetxt('syn{0}.txt'.format(indice), self.w_syn_list[indice], fmt='%f')
+            data = self.w_syn_list[indice].tolist()
+            obj_dados['w_synp'].append(data)
+            #print(self.w_syn_list[indice])
 
         for indice in range(len(self.w_bias_list)):
-            np.savetxt('bias{0}.txt'.format(indice), self.w_bias_list[indice], fmt='%f')
+            data = self.w_bias_list[indice].tolist()
+            obj_dados['w_bias'].append(data)
+            #print(self.w_bias_list[indice])
+
+        neural['neural'].append(obj_dados)
+
+        with open(file, 'w') as f:
+            json.dump(neural, f, ensure_ascii=False, indent=4)
 
     def feed_forward(self, layer):
         '''
@@ -68,7 +119,7 @@ class NeuralNet(object):
         local_layer: neuronio pai
         limite: indice maximo
         result: resultado esperado
-        return: erro da camada anterior ou None para primeira camada 
+        return: erro da camada anterior ou None para primeira camada
         '''
         #variavel de retorno de erro para acamada inferior
         erro = None
@@ -83,7 +134,7 @@ class NeuralNet(object):
             self.w_bias_list[index] += delta
 
             if index != 0:
-                #demais camadas calcula o erro local pelo delta da camada 
+                #demais camadas calcula o erro local pelo delta da camada
                 erro = delta.T.dot(self.w_syn_list[index])
 
                 #calcula baseado no shapes passados
@@ -92,14 +143,14 @@ class NeuralNet(object):
                 else:
                     self.w_syn_list[index] += local_layer.T.dot(delta)
             else:
-                #primeira camada nao tem correção de erro para a proxima               
+                #primeira camada nao tem correção de erro para a proxima
                 self.w_syn_list[index] += local_layer.dot(delta.T).T
         else:
             #Ultima camada calcula o delta e o erro para a camada anterior
             erro = result - layer
             if (epoc % 10000) == 0:
                 print('Error:' + str(np.mean(np.abs(erro))))
-            
+
             #multiplica o erro pela derivada da camada atual
             delta = erro * sigmoid_derivative(layer)
 
@@ -136,40 +187,4 @@ class NeuralNet(object):
             num_camadas = len(self.w_bias_list)
             self.dep_layer_trainer(0, j, l0, num_camadas, result)
 
-if __name__ == '__main__':
-
-    #lista treinamento  
-    lista_v = np.array([ [0, 0, 1, 0, 
-                          0, 0, 1, 0,
-                          0, 0, 1, 0, 
-                          0, 0, 1, 0],
-                         [1, 1, 1, 1, 
-                          0, 1, 1, 0,
-                          0, 1, 1, 0, 
-                          1, 1, 1, 1],
-                         [1, 1, 1, 1, 
-                          1, 0, 0, 1,
-                          1, 0, 0, 1, 
-                          1, 1, 1, 1],
-                         [0, 0, 0, 0, 
-                          1, 1, 1, 1,
-                          1, 0, 0, 1, 
-                          0, 0, 0, 0]])
-
-    #lista resposta
-    lista_r = np.array([ [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0], [1, 0, 0, 0] ])
-
-    #16 entrada 4 saida 1 hidden layer com 3 camadas 
-    grid=[16, 32, 24, 8, 4]
-    neural = NeuralNet(grid)
-    neural.trainner(lista_v, 4, lista_r, 60000)
-
-    neural.save()
-
-    for indice in range(4):
-        li = lista_v[indice : indice + 1].T        
-        lo =  np.around(neural.feed_forward(li), 1)
-        print(lo.astype(int).T)
-
-
-
+# if __name__ == '__main__':
