@@ -12,17 +12,13 @@ Update on 20180219
 #pylint: disable=R0913
 
 import json
-
 import numpy as np
-
-from ActivactionFunction import sigmoid
-from ActivactionFunction import sigmoid_derivative
 
 class NeuralNet(object):
     '''
     Classe de Neuronios padrao camadas definidas por grid
     '''
-    def __init__(self, grid):
+    def __init__(self, grid, activation):
         '''
         Inicializa listas de pesos sinapticos e lista de bias com valores aleatorios
         grid: array com geometrida das camadas de entrada, hidden's e saida ou None se carga por arquivo
@@ -30,6 +26,7 @@ class NeuralNet(object):
         '''
         self.w_syn_list = []
         self.w_bias_list = []
+        self.activation = activation
 
         if grid is not None:
             for index in range(1, len(grid)):
@@ -37,12 +34,24 @@ class NeuralNet(object):
                 atual = grid[index]
                 anterior = grid[index-1]
 
-                w_syn = 2 * np.random.random((atual, anterior)) - 1
-                w_bias = 2 * np.random.random((atual, 1)) - 1
+                #seguindo http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
+                #em http://www.wildml.com/2015/09/recurrent-neural-networks-tutorial-part-2-implementing-a-language-model-rnn-with-python-numpy-and-theano/
+                w_syn = np.random.uniform(-np.sqrt(1./anterior), np.sqrt(1./anterior), (atual, anterior))
+                w_bias = np.random.uniform(-np.sqrt(1./anterior), np.sqrt(1./anterior), (atual, 1))
 
                 self.w_syn_list.append(w_syn)
                 self.w_bias_list.append(w_bias)
 
+    def __str__(self):
+        '''
+        exibe dados dos pesos e bias
+        '''
+        indice = 0
+        for bias, weight in zip(self.w_bias_list, self.w_syn_list):
+            print('weight:{0}\n{1}'.format(indice, weight))
+            print('bias:  {0}\n{1}'.format(indice, bias))
+            indice += 1
+        
     def load(self, name, file):
         '''
         Carrega pesos treinados de arquivo json
@@ -77,7 +86,6 @@ class NeuralNet(object):
         name: nome da carga neural
         file: arquivo a ser salvo
         '''
-
         neural = {}
         neural['neural'] = []
 
@@ -108,7 +116,8 @@ class NeuralNet(object):
         return: matriz de dados de saida
         '''
         for bias, weight in zip(self.w_bias_list, self.w_syn_list):
-            layer = sigmoid(np.dot(weight, layer) + bias)
+            layer = self.activation.forward(np.dot(weight, layer) + bias)
+
         return layer
 
     def dep_layer_trainer(self, index, epoc, local_layer, limite, result):
@@ -123,14 +132,14 @@ class NeuralNet(object):
         '''
         #variavel de retorno de erro para acamada inferior
         erro = None
-        layer = sigmoid(np.dot(self.w_syn_list[index], local_layer) + self.w_bias_list[index])
+        layer = self.activation.forward(np.dot(self.w_syn_list[index], local_layer) + self.w_bias_list[index])
 
         if index < limite - 1:
             #camadas 0 ate penultima
             erro = self.dep_layer_trainer(index + 1, epoc, layer, limite, result)
 
             #calcula o delta atual pelo erro da camada anterior e acumula no bias
-            delta = erro.T * sigmoid_derivative(layer)
+            delta = erro.T * self.activation.backward(layer)
             self.w_bias_list[index] += delta
 
             if index != 0:
@@ -152,7 +161,7 @@ class NeuralNet(object):
                 print('Error:' + str(np.mean(np.abs(erro))))
 
             #multiplica o erro pela derivada da camada atual
-            delta = erro * sigmoid_derivative(layer)
+            delta = erro * self.activation.backward(layer)
 
             #acumula o delta no Bias
             self.w_bias_list[index] += delta
@@ -187,4 +196,13 @@ class NeuralNet(object):
             num_camadas = len(self.w_bias_list)
             self.dep_layer_trainer(0, j, l0, num_camadas, result)
 
+# class rnn(NeuralNet):
+#     def __init__(self, grid, epoc):
+#         NeuralNet.__init__(self, grid)
+
+#         self.T = 
+
 # if __name__ == '__main__':
+
+#     nova = rnn([2,3,3,2], epoc)
+#     print(nova)
